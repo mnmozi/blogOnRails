@@ -1,0 +1,63 @@
+version: "2.4"
+
+services:
+  blogonrails:
+    build: ./blogOnRails
+    entrypoint: [./bin/entry.sh]
+    volumes:
+      - ./blogOnRails:/ruby
+    networks:
+      - backend
+    ports:
+      - 3000:3000
+    depends_on:
+      db:
+        condition: service_healthy
+      sidekiq:
+        condition: service_started
+    env_file:
+      - .env
+
+  sidekiq:
+    build: ./blogOnRails
+    command: bundle exec sidekiq
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./blogOnRails:/ruby
+    env_file:
+      - .env
+
+    networks:
+      - backend
+
+  db:
+    image: mysql:8
+    volumes:
+      - ./data/database/files:/var/lib/mysql
+    networks:
+      - backend
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+    env_file:
+      - .env
+
+  redis:
+    image: redis:6-bullseye
+    command: redis-server
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+    volumes:
+      - ./data/database/redis:/data
+    networks:
+      - backend
+    ports:
+      - 6379:6379
+
+networks:
+  backend:
