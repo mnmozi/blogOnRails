@@ -18,12 +18,10 @@ module Api
             post.update(user: @user) 
             
             tags = Tag.where(name: tags_params[:tags])
-            Rails.logger.debug tags
-            Rails.logger.debug "hereeee"
             post.tags = tags
 
             if post.save
-                HardWorker.perform_in(15.minutes, post.id)
+                DeletePostWorker.perform_in(15.minutes, post.id)
                 render json:{Post: PostRepresenter.new(post).as_json}, status: :created
             else 
                 
@@ -44,8 +42,6 @@ module Api
         def update
             removedTags = @post.tags.where(name: update_tags_params[:removedTags])
             addedTags = Tag.where(name: update_tags_params[:addedTags]).ids
-
-            Rails.logger.debug addedTags
             @post.transaction do
                 @post.tags.delete(removedTags)
                 @post.tags << (addedTags - @post.tags.all.ids)

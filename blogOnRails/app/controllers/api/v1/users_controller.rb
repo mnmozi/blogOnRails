@@ -14,15 +14,12 @@ module Api
 
          def show 
             user = User.find(params[:id]);
-            Rails.logger.debug "user"
-            Rails.logger.debug user
             userResult =  UserRepresenter.new(user).as_json .merge("image": url_for(user.image)) 
             render json:{status: 'SUCCESS', message:'Loaded user', data: userResult}, status: :ok
          end
 
          def create 
             user = User.new(create_user_params)
-            Rails.logger.debug user
             if user.save   
                render json:{user: UserRepresenter.new(user).as_json}, status: :created
            else 
@@ -45,7 +42,6 @@ module Api
          end
 
          def create_user_params
-            Rails.logger.debug params.require(:user)
             params.require(:user).permit(:email, :password, :password_confirmation, :name, :image)
          end
 

@@ -1,4 +1,4 @@
-class HardWorker
+class DeletePostWorker
   include Sidekiq::Worker
 
   def perform(*args)
